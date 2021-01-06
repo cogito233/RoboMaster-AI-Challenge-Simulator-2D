@@ -74,19 +74,37 @@ class kenal(object):
     def sp_init_change_value(self,f):
         for i in range(math.floor(f[0]),math.ceil(f[1])):
             for j in range(math.floor(f[2]),math.ceil(f[3])):
-                map_line[i][j]=1
+                if (sp_map[i][j]==0):
+                    sp_map[i][j]=1
 
     def sp_init(self,car_th):
-        sp_map=np.zero(map_width,map_length,dtype='short')
+        sp_map=np.zero([map_width,map_length],dtype='uint32')
+        sp_value=np.zero([map_width,map_length],dtype='float')
+        sp_flag=np.zero([map_width,map_length],dtype='uint16')
+        sp_seq=np.zero([map_width*map_length*5,2],dtype='uint32')
+        sp_l,sp_r,sp_c=0,0,[[0,1],[0,-1],[1,0],[-1,0]]
         for i in range(barriers.shape[0]):sp_init_change_value(barrrs[i])
         for i in range(cars.shape[0]):
             if (i!=car_th):
-                sp_init_change_value(np.array([cars[i][0]-30,cars[i][0]+30,cars[i][1]-30,cars[i][1]+30]))7
-        for i
+                sp_init_change_value(np.array([cars[i][0]-30,cars[i][0]+30,cars[i][1]-30,cars[i][1]+30]))
+
+        while (sp_l<sp_r):
+            sp_l+=1
+            for dx,dy in sp_c:
+                x,y=dx+sp_seq[sp_l][0],dy+sp_seq[sp_l][1]
+                if (flag[x][y]==0):
+                    flag[x][y]=1
+                    value[x][y]=value[sp_seq[sp_l][0]][sp_seq[sp_l][1]]+1
+                    sp_r+=1
+                    seq[sp_r]=[x,y]
+
 
     def sp_calc(self,p_begin,p_end):
-
+        x,y=p_begin
+        xx,yy=p_end
+        sp_flag=np.zero([map_width,map_length],dtype='uint16')
 
     def sp_follow_the_road(self,p_begin,p_end):
         def dfs():
             if (last[i][j])
+
