@@ -71,40 +71,110 @@ class kenal(object):
             self.font = pygame.font.SysFont('info', 20)
             self.clock = pygame.time.Clock()
 
-    def sp_init_change_value(self,f):
-        for i in range(math.floor(f[0]),math.ceil(f[1])):
-            for j in range(math.floor(f[2]),math.ceil(f[3])):
-                if (sp_map[i][j]==0):
-                    sp_map[i][j]=1
+            self.sp_map = np.zero([map_width, map_length], dtype='uint32')
+            self.sp_value = np.zero([map_width, map_length], dtype='float')
+            self.sp_flag = np.zero([map_width, map_length], dtype='uint32')
+            self.sp_ff = np.zero([map_width, map_length], dtype='uint32')
+            self.sp_route=np.zero([map_width*map_length*5,2],dtype='uint32')
+            self.sp_last=np.zero([map_width, map_length],dtype='uint32')
+
+
 
     def sp_init(self,car_th):
-        sp_map=np.zero([map_width,map_length],dtype='uint32')
-        sp_value=np.zero([map_width,map_length],dtype='float')
-        sp_flag=np.zero([map_width,map_length],dtype='uint16')
-        sp_seq=np.zero([map_width*map_length*5,2],dtype='uint32')
-        sp_l,sp_r,sp_c=0,0,[[0,1],[0,-1],[1,0],[-1,0]]
+        def sp_init_change_value(f):
+            global r,self.sp_map
+            for i in range(math.floor(f[0]),math.ceil(f[1])):
+                for j in range(math.floor(f[2]),math.ceil(f[3])):
+                    if (self.sp_map[i][j]==0):
+                        self.sp_map[i][j]=1
+                        r+=1
+                        seq[r]=[i,j]
+        self.sp_map=np.zero([map_width,map_length],dtype='uint32')
+        self.sp_value=np.zero([map_width,map_length],dtype='float')
+        self.sp_flag=np.zero([map_width,map_length],dtype='uint16')
+        seq=np.zero([map_width*map_length*5,2],dtype='uint32')
+
+        l,r,c=0,0,[(0,1),(0,-1),(1,0),(-1,0)]
         for i in range(barriers.shape[0]):sp_init_change_value(barrrs[i])
         for i in range(cars.shape[0]):
             if (i!=car_th):
                 sp_init_change_value(np.array([cars[i][0]-30,cars[i][0]+30,cars[i][1]-30,cars[i][1]+30]))
 
-        while (sp_l<sp_r):
-            sp_l+=1
-            for dx,dy in sp_c:
-                x,y=dx+sp_seq[sp_l][0],dy+sp_seq[sp_l][1]
-                if (flag[x][y]==0):
-                    flag[x][y]=1
-                    value[x][y]=value[sp_seq[sp_l][0]][sp_seq[sp_l][1]]+1
-                    sp_r+=1
-                    seq[sp_r]=[x,y]
+        while (l<r):
+            l+=1
+            for dx,dy in c:
+                x,y=dx+seq[sp_l][0],dy+seq[l][1]
+                if (self.sp_flag[x][y]==0):
+                    self.sp_flag[x][y]=1
+                    self.sp_value[x][y]=self.sp_value[[seq[l][0]][seq[l][1]]+1
+                    r+=1
+                    seq[r]=[x,y]
 
+        for i in range(1,map_width+1):
+            for j in range(1,map_length+1):
+                if (self.sp_value[i][j]<=25):
+                    self.sp_map[i][j]=1
+                else:self.sp_value[i][j]-=25;
+        self.sp_value=200/(self.sp_value+1e-5)+1
 
-    def sp_calc(self,p_begin,p_end):
+    def sp_calc(self,p_begin):
+        self.sp_map = np.zero([map_width, map_length], dtype='uint32')
+        self.sp_value = np.zero([map_width, map_length], dtype='float')
+        self.sp_flag = np.zero([map_width, map_length], dtype='uint32')
+        self.sp_ff = np.zero([map_width, map_length], dtype='uint32')
+        self.sp_last = np.zero([map_width, map_length,2], dtype='uint32')
+        seq=np.zero([mawidth*map_length*5,2],dtype='uint32')
+        f=np.zero([map_width*map_length*5,2],dtype='float')
+        for i in range(f.shape[0]):
+            for j in range(f.shape[1]):f[i][j]=1e15
+
         x,y=p_begin
-        xx,yy=p_end
-        sp_flag=np.zero([map_width,map_length],dtype='uint16')
+        l,r,c=0,1,[(0,1),(0,-1),(1,0),(-1,0)]
+        seq[r]=[x,y]
+        f[x]=0
+        while (l<r&&r<map_width*map_length*5-4):
+            l+=1
+            for dx,dy in c:
+                x,y=seq[l][0]+dx,seq[l][1]+dy
+                if (self.sp_map[x][y] == 0 && f[x][y] + 1e-5 > f[seq[l][0]][seq[l][1]] + self.sp_value[x][y]):
+                    f[x][y] = f[seq[l][0]][seq[l][1]] + self.sp_value[x][y]
+                    self.sp_last[x][y]=seq[l]
+                    self.sp_ff[x][y]=1
+                    if (self.sp_flag[x][y]==0):
+                        self.sp_flag[x][u]=1
+                        r+=1
+                        seq[r]=[x,y]
+            self.sp_flag[seq[l][0]][seq[l][1]]=0
 
     def sp_follow_the_road(self,p_begin,p_end):
-        def dfs():
-            if (last[i][j])
-
+        self.sp_calc(p_begin)
+        z,d=[],0
+        def dfs(x,y):
+            global z
+            if (self.sp_last[i][j][1]!=0):dfs(last[x][y][0],last[x][y][1])
+            d+=1
+            z[d]=(x,y)
+        if (ff[p_end[0]][p_end[1]]==0):return "No such path"
+        dfs(p_end[0],p_end[1])
+        x,y,xx,yy,now_x,now_y=0,0,[0]*map_width*map_length,[0]*map_width*map_length,z[1][0],z[1][1]
+        zz=[(now_x,now_y)]
+        for i in range(2,d+1):
+            if (z[i][0]-z[i-1][0]!=0):
+                x+=z[i][0]-z[i-1][0]
+                if (y!=0):
+                    now_x,now_y=now_x+x,now_y+y
+                    zz+=[(now_x,now_y)]
+                    x,y=0,0
+            if (z[i][1]-z[i-1][1]!=0):
+                y+=z[i][1]-z[i-1][1]
+                if (x!=0):
+                    now_x,now_y=now_x+x,now_y+y
+                    zz+=[(now_x,now_y)]
+                    x,y=0,0
+        if (x!=0||y!=0)
+            now_x,now_y=now_x+x,now_y+y
+            zz+=[(now_x,now_y)]
+            x,y=0,0
+        for x,y in zz:print(x,y)
+        sp_route=np.array(zz)
+        return zz
