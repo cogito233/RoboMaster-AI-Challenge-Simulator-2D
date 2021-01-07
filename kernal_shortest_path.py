@@ -82,7 +82,7 @@ class kenal(object):
 
     def sp_init(self,car_th):
         def sp_init_change_value(f):
-            global r,self.sp_map
+            global r
             for i in range(math.floor(f[0]),math.ceil(f[1])):
                 for j in range(math.floor(f[2]),math.ceil(f[3])):
                     if (self.sp_map[i][j]==0):
@@ -95,10 +95,10 @@ class kenal(object):
         seq=np.zero([map_width*map_length*5,2],dtype='uint32')
 
         l,r,c=0,0,[(0,1),(0,-1),(1,0),(-1,0)]
-        for i in range(barriers.shape[0]):sp_init_change_value(barrrs[i])
+        for i in range(self.barriers.shape[0]):sp_init_change_value(self.barriers[i])
         for i in range(cars.shape[0]):
-            if (i!=car_th):
-                sp_init_change_value(np.array([cars[i][0]-30,cars[i][0]+30,cars[i][1]-30,cars[i][1]+30]))
+            if (i!=self.car_th):
+                sp_init_change_value(np.array([self.cars[i][0]-30,self.cars[i][0]+30,self.cars[i][1]-30,self.cars[i][1]+30]))
 
         while (l<r):
             l+=1
@@ -176,5 +176,5 @@ class kenal(object):
             zz+=[(now_x,now_y)]
             x,y=0,0
         for x,y in zz:print(x,y)
-        sp_route=np.array(zz)
+        self.sp_route=np.array(zz)
         return zz
