@@ -73,6 +73,7 @@ class kenal(object):
             self.font = pygame.font.SysFont('info', 20)
             self.clock = pygame.time.Clock()
 
+            map_width, map_length = 810, 510
             self.sp_map = np.zero([map_width, map_length], dtype='uint32')
             self.sp_value = np.zero([map_width, map_length], dtype='float')
             self.sp_flag = np.zero([map_width, map_length], dtype='uint32')
@@ -89,16 +90,31 @@ class kenal(object):
             self.sp_Penalty_value=np.zero(map_width*map_length*5,dtype='float')
             self.sp_circular_obstacles=[]
     def sp_init(self,car_th):
+
         map_width, map_length=810,510
 
         def sp_init_change_value(f):
-            global r,self.sp_map
+            global r
             for i in range(math.floor(f[0]),math.ceil(f[1])):
                 for j in range(math.floor(f[2]),math.ceil(f[3])):
                     if (self.sp_map[i][j]==0):
                         self.sp_map[i][j]=1
                         r+=1
                         seq[r]=[i,j]
+        def add_circular_obstacles(x,y,xx,yy):
+            self.sp_circular_obstacles+=[[(x+xx)/2,(y+yy)/2,math.sqrt((xx-x)*(xx-x)+(yy-y)*(yy-y))/2]]
+
+        def sp_circular_obstacles(f):
+            x,xx,y,yy=f[0],f[1],f[2],f[3]
+            if (x<xx):swap(x,xx)
+            if (y<yy):swap(y,yy)
+            dd=min(xx-x,yy-y)
+            while (xx-x>dd or yy-y>dd):
+                add_circular_obstacles(x,y,x+dd,y+dd)
+             if (xx-x>yy-y)x+=dd
+                else:y+=dd
+            add_circular_obstacles(xx-dd, yy-dd, xx, yy)
+
         self.sp_map=np.zero([map_width,map_length],dtype='uint32')
         self.sp_value=np.zero([map_width,map_length],dtype='float')
         self.sp_flag=np.zero([map_width,map_length],dtype='uint16')
@@ -106,10 +122,10 @@ class kenal(object):
 
         l,r=0,0
         c=[(0,1),(0,-1),(1,0),(-1,0)]
-        for i in range(barriers.shape[0]):
-            sp_init_change_value(barrrs[i])
-            ###
-        for i in range(cars.shape[0]):
+        for i in xrange(self.barriers.shape[0]):
+            sp_init_change_value(self.barriers[i])
+            sp_circular_obstacles(self.barriers[i])
+        for i in xrange(cars.shape[0]):
             if (i!=car_th):
                 sp_init_change_value(np.array([cars[i][0]-30,cars[i][0]+30,cars[i][1]-30,cars[i][1]+30]))
 
@@ -123,7 +139,7 @@ class kenal(object):
                     r+=1
                     seq[r]=[x,y]
 
-        for i in range(1,map_width+1):
+        for i in xrange(1,map_width+1):
             for j in range(1,map_length+1):
                 if (self.sp_value[i][j]<=25):
                     self.sp_map[i][j]=1
@@ -167,7 +183,7 @@ class kenal(object):
         self.sp_calc(p_begin)
         z,d=[],0
         def dfs(x,y):
-            global z
+            global z,d
             if (self.sp_last[i][j][1]!=0):dfs(last[x][y][0],last[x][y][1])
             d+=1
             z[d]=(x,y)
@@ -198,11 +214,23 @@ class kenal(object):
         return zz
 
     def sp_calc_Penalty_value(self,car_th):
+        def norm(x, y):
+            return sqrt(x * x + y * y)
+        def calc_angle(a,b,c):
+            x,y=b[0]-a[0],b[1]-a[1]
+            xx,yy=c[0]-a[0],c[1]-a[1]
+            return math.acos((x*xx+y*yy)/norm(x,y)/norm(xx,yy))
+
         n=self.sp_route.shape[0]
         if (self.sp_tag==1):
-            for i in range(n,1,-1):
-
-                self.sp_Penalty_value[i]=angle/self.sp_value[]
+            for i in range(n-1,1,-1):
+                angle=calc_angle(sp_route[i],sp_route[i+1],sp_route(i-1))
+                self.sp_Penalty_value[i]=angle/self.sp_value[self.sp_route[i][0]][self.sp_route[i][1]]*1000
+                if (i!=n-1):
+                    k=self.sp_Penalty_value[i+1]-norm(sp_route[i][0]-sp_route[i+1][0],sp_route[i][1]-sp_route[i+1][1])
+                    self.sp_Penalty_value[i]=min(self.sp_Penalty_value[i],k)
+        return self.sp_Penalty_value[sp_route_th]\
+               -norm(cars[car_th][1]-sp_route[sp_route_th+1][0],cars[car_th][2]-sp_route[sp_route_th+1][1])
 
     def sp_speed_changing(self,car_th=1,p_target_local=None):
         def norm(x,y):
