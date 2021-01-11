@@ -87,7 +87,7 @@ class kenal(object):
             self.sp_v_lowerbound=-0.001
             self.sp_v_upperbound=0.01
             self.sp_Penalty_value=np.zero(map_width*map_length*5,dtype='float')
-            self.now_point=0
+            self.sp_circular_obstacles=[]
     def sp_init(self,car_th):
         map_width, map_length=810,510
 
@@ -106,7 +106,9 @@ class kenal(object):
 
         l,r=0,0
         c=[(0,1),(0,-1),(1,0),(-1,0)]
-        for i in range(barriers.shape[0]):sp_init_change_value(barrrs[i])
+        for i in range(barriers.shape[0]):
+            sp_init_change_value(barrrs[i])
+            ###
         for i in range(cars.shape[0]):
             if (i!=car_th):
                 sp_init_change_value(np.array([cars[i][0]-30,cars[i][0]+30,cars[i][1]-30,cars[i][1]+30]))
@@ -199,7 +201,7 @@ class kenal(object):
         n=self.sp_route.shape[0]
         if (self.sp_tag==1):
             for i in range(n,1,-1):
-                
+
                 self.sp_Penalty_value[i]=angle/self.sp_value[]
 
     def sp_speed_changing(self,car_th=1,p_target_local=None):
@@ -249,6 +251,12 @@ class kenal(object):
         from RVO import RVO_update, reach, compute_V_des, reach, Tools
         from vis import visualize_traj_dynamic
         #将障碍物和小车都转换成圆形的物体输入
+        ws_model = dict()
+        ws_model['robot_radius'] = 0.4
+        ws_model['circular_obstacles'] =self.sp_circular_obstacles
+        ws_model['boundary'] = [400,250,400,250]
+        X=
+
 
     def sp_follower(self,car_th=1,p_target_global=None):#20fps
         def clc(x,y):#算范数的平方
