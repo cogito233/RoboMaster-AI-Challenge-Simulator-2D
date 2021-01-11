@@ -90,9 +90,7 @@ class kenal(object):
             self.sp_Penalty_value=np.zero(map_width*map_length*5,dtype='float')
             self.sp_circular_obstacles=[]
     def sp_init(self,car_th):
-
         map_width, map_length=810,510
-
         def sp_init_change_value(f):
             global r
             for i in range(math.floor(f[0]),math.ceil(f[1])):
@@ -103,7 +101,6 @@ class kenal(object):
                         seq[r]=[i,j]
         def add_circular_obstacles(x,y,xx,yy):
             self.sp_circular_obstacles+=[[(x+xx)/2,(y+yy)/2,math.sqrt((xx-x)*(xx-x)+(yy-y)*(yy-y))/2]]
-
         def sp_circular_obstacles(f):
             x,xx,y,yy=f[0],f[1],f[2],f[3]
             if (x<xx):swap(x,xx)
@@ -114,7 +111,6 @@ class kenal(object):
              if (xx-x>yy-y)x+=dd
                 else:y+=dd
             add_circular_obstacles(xx-dd, yy-dd, xx, yy)
-
         self.sp_map=np.zero([map_width,map_length],dtype='uint32')
         self.sp_value=np.zero([map_width,map_length],dtype='float')
         self.sp_flag=np.zero([map_width,map_length],dtype='uint16')
