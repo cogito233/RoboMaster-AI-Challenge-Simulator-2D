@@ -86,7 +86,8 @@ class kenal(object):
             self.sp_angle_upperbound=0
             self.sp_v_lowerbound=-0.001
             self.sp_v_upperbound=0.01
-
+            self.sp_Penalty_value=np.zero(map_width*map_length*5,dtype='float')
+            self.now_point=0
     def sp_init(self,car_th):
         map_width, map_length=810,510
 
@@ -191,66 +192,69 @@ class kenal(object):
             zz+=[(now_x,now_y)]
             x,y=0,0
         for x,y in zz:print(x,y)
-        sp_route=np.array(zz)
+        self.sp_route=np.array(zz)
         return zz
 
-    def calc_Penalty_value(self,car_th):
-	if (self.sp_tag==1):
-	
+    def sp_calc_Penalty_value(self,car_th):
+        n=self.sp_route.shape[0]
+        if (self.sp_tag==1):
+            for i in range(n,1,-1):
+                
+                self.sp_Penalty_value[i]=angle/self.sp_value[]
 
     def sp_speed_changing(self,car_th=1,p_target_local=None):
         def norm(x,y):
             return sqrt(x*x+y*y)
 
         Penalty_value=self.calc_Penalty_value(car_th)
-	#惩罚值越高代表全局地图在当前节点越难走，和最近的那个拐弯的角度和拐弯点的costmap有关
+        #惩罚值越高代表全局地图在当前节点越难走，和最近的那个拐弯的角度和拐弯点的costmap有关
         max_speed=min(3,max(p_target_local[2],1/Penalty_value))#计算最大速度
         PI=math.acos(-1)
 
         car_x,car_y=self.cars[car_th][1],self.cars[car_th][2]
         car_theta=self.cars[car_th][3]*PI/180
-	#小车当前的位置和底盘角度
+        #小车当前的位置和底盘角度
 
         dx,dy=p_target_global[0]-car_x,p_target_global[1]-car_y
         vx,vy=self.acts[car_th][1],self.acts[car_th][2]
-        cos_theta,sin_theta=math.cos(car_theta),math.sin(sin_theta)
+        cos_theta,sin_theta=math.cos(car_theta),math.sin(car_theta)
         new_dx,new_dy=dx*cos_theta+dy*sin_theta,dy*cos_theta-dx*sin_theta
         new_vx=new_dx/norm(new_dx,new_dy)*max_speed
         new_vy=new_dy/norm(new_dx,new_dy)*max_speed
         dvx,dvy=(new_vx-vx),(new_vy-vy)
-	#获得在当前小车参考系下的新速度
+        #获得在当前小车参考系下的新速度
 
         if (dvx<self.sp_v_lowerbound):orders[car_th][0]=1
         if (dvx>self.sp_v_upperbound):orders[car_th][0]=-1
         if (dvy<self.sp_v_lowerbound):orders[car_th][1]=1
         if (dvy>self.sp_v_upperbound):orders[car_th][1]=-1
-	#如果超过了某个阈值，就启动加速/减速	
+        #如果超过了某个阈值，就启动加速/减速
 
         delta_theta=math.asin((vx*new_vy-vy*new_vx)/norm(vx,vy)/norm(new_vx,new_vy))
         cos_d_theta, sin_d_theta=math.cos(delta_theta),math.sin(delta_theta)
-	#计算改变的角度
+        #计算改变的角度
         if (cos_d_theta*cos_theta-sin_d_theta*sin_theta!=new_vx/norm(new_vx,new_vy)or
             sin_d_theta*cos_theta+cos_d_theta*sin_theta!=new_vy/norm(new_vx,new_vy)):
             if (delta_theta>0):delta_theta-=PI
             else:delta_theta+=PI
-	#处理答案不在+-Pi/2里的情况
+        #处理答案不在+-Pi/2里的情况
         delta_theta=fmod(delta_theta,PI/2)
 
         if (delta_theta<self.sp_angle_lowerbound):orders[car_th][2]=-1
         if (delta_theta>self.sp_angle_upperbound):orders[car_th][2]=1
-	#如果超过了某个阈值，就启动底盘加速/减速	
+        #如果超过了某个阈值，就启动底盘加速/减速
 
     def sp_RVO(self,car_th=1,p_target_local=None):#20fps
-	#调用RVO模块
+        #调用RVO模块
         from RVO import RVO_update, reach, compute_V_des, reach, Tools
         from vis import visualize_traj_dynamic
-	#将障碍物和小车都转换成圆形的物体输入
+        #将障碍物和小车都转换成圆形的物体输入
 
     def sp_follower(self,car_th=1,p_target_global=None):#20fps
         def clc(x,y):#算范数的平方
             return (x[0]-y[0])*(x[0]-y[0])+(x[1]-y[1])*(x[1]-y[1])
 
-	#如果没有输入就随机一个初始节点
+        #如果没有输入就随机一个初始节点
         if (p_target_global==None):p_target_global=lf.sp_target_global
         else:
             self.sp_target_global=p_target_global
