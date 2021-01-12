@@ -228,7 +228,7 @@ class kenal(object):
         return self.sp_Penalty_value[sp_route_th]\
                -norm(cars[car_th][1]-sp_route[sp_route_th+1][0],cars[car_th][2]-sp_route[sp_route_th+1][1])
 
-    def sp_speed_changing(self,car_th=1,p_target_local=None):
+    def sp_speed_changing(self,car_th=0,p_target_local=None):
         def norm(x,y):
             return sqrt(x*x+y*y)
 
@@ -270,7 +270,15 @@ class kenal(object):
         if (delta_theta>self.sp_angle_upperbound):orders[car_th][2]=1
         #如果超过了某个阈值，就启动底盘加速/减速
 
-    def sp_RVO(self,car_th=1,p_target_local=None):#20fps
+    def sp_RVO(self,car_th=0,p_target_local=None):#20fps
+        def calc_V(vx,vy,theta):
+            cos_theta=math.cos(theta)
+            sin_theta=math.sin(theta)
+            vx_new=cos_theta*vx-sin_theta*vy
+            vy_new=sin_theta*vx+cos_theta*vy
+            return [vx_new,vy_new]
+        def norm(x,y):
+            return math.sqrt(x*x+y*y)
         #调用RVO模块
         from RVO import RVO_update, reach, compute_V_des, reach, Tools
         from vis import visualize_traj_dynamic
@@ -279,10 +287,26 @@ class kenal(object):
         ws_model['robot_radius'] = 0.4
         ws_model['circular_obstacles'] =self.sp_circular_obstacles
         ws_model['boundary'] = [400,250,400,250]
-        X=
+        X=[]
+        for i in range(4):X+=[[cars[i][1],cars[i][2]]]
+        goals=[[0,0],[0,0],[0,0],[0,0]]
+        V_max=[3]*4
+        #goals[car_th]=[self.sp_route[self.sp_route_th][0],self.sp_route[self.sp_route_th][1]]
+        goals[car_th]=p_target_local
+        V=[]
+        for i in range(4):V+=[calc_V(acts[i][2],acts[i][3],cars[i][3])]
+        V_des = compute_V_des(X, goal, V_max)
+        for i in range(4):
+            if (i!=car_th):V_des[i]=V[i]
+        V = RVO_update(X, V_des, V, ws_model,local=2)
+        p_target_local=V[car_th]
+        p_target_local[0]+=cars[car_th][1]
+        p_target_local[1]+=cars[car_th][2]
+        p_target_local+=[norm(V[car_th][0],V[car_th][1])]
+        return V[car_th]
 
 
-    def sp_follower(self,car_th=1,p_target_global=None):#20fps
+    def sp_follower(self,car_th=0,p_target_global=None):#20fps
         def clc(x,y):#算范数的平方
             return (x[0]-y[0])*(x[0]-y[0])+(x[1]-y[1])*(x[1]-y[1])
 
